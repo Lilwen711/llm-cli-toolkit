@@ -4,5 +4,7 @@ __pycache__/
 .env
 out/
 logs/
+scratch/
+
 # Virtual environments
 .venv
