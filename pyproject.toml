@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "dashscope>=1.27.8",
     "openai>=3.35.1",
+    "pypdf>=6.21.2",
     "python-dotenv>=1.2.4",
 ]
 
@@ -19,3 +20,8 @@ build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-name = "llm_cli"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

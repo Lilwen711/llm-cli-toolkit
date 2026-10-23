@@ -48,6 +48,7 @@ class LLMClient:
             api_key=settings.api_key,
             base_url=settings.base_url,
             timeout=settings.timeout,
+            max_retries=0,
         )
 
     def complete(self, instructions: str, user_input: str) -> str:
