@@ -12,4 +12,4 @@ RUN UV_DEFAULT_INDEX=https://mirrors.aliyun.com/pypi/simple/ uv sync --no-dev
 
 COPY data ./data
 
-ENTRYPOINT ["uv", "run", "llm-cli"]
+ENTRYPOINT ["uv", "run", "--no-sync", "llm-cli"]

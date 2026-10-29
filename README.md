@@ -147,6 +147,11 @@ docker run --rm --entrypoint ls llm-cli:0.1 -la /app     # 不应出现 .env
 docker history --no-trunc llm-cli:0.1 | grep -c "sk-"    # 应为 0
 ```
 
+**入口带 `--no-sync`，不要去掉**：`ENTRYPOINT` 是 `uv run --no-sync llm-cli`。
+不加 `--no-sync` 的话，`uv run` 每次启动都会同步 dev 依赖（pytest 那 5 个包）——
+在能联网的机器上表现为启动慢几秒，在**只有内网**的环境里会直接卡住。
+依赖在 `build` 阶段就该装全，运行时不该再碰网络。
+
 **想在容器里执行别的命令**，必须用 `--entrypoint` 覆盖（因为默认入口是 `uv run llm-cli`，
 后面跟的参数会被当成子命令）：
 
