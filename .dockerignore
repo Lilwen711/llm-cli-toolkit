@@ -1,0 +1,12 @@
+.env
+.venv/
+out/
+logs/
+.git/
+__pycache__/
+*.pyc
+.pytest_cache/
+scratch/
+notes/
+tests/
+get-docker.sh
