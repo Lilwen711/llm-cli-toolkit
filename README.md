@@ -52,6 +52,125 @@ uv run llm-cli parse data/a.txt
 }
 ```
 
+## 部署到服务器
+
+以下步骤在**一台全新的 Ubuntu 22.04 / 24.04** 上从零走完，不需要事先装 Python。
+国内网络环境下的两个坑已在对应步骤标注。
+
+### 1. 拉代码
+
+```bash
+git clone https://github.com/Lilwen711/llm-cli-toolkit.git
+cd llm-cli-toolkit
+```
+
+### 2. 装 uv
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env
+uv --version
+```
+
+> **坑 1｜`astral.sh` 在国内常被重置连接**（报 `Connection reset by peer`）。
+> 装不上就改用 pip：
+>
+> ```bash
+> apt install -y python3-pip
+> python3 -m pip install -i https://mirrors.aliyun.com/pypi/simple/ --break-system-packages uv
+> uv --version
+> ```
+>
+> `--break-system-packages` 是 Ubuntu 24.04 的 PEP 668 保护，不加会拒绝安装。
+
+### 3. 装依赖
+
+```bash
+uv sync
+```
+
+> **坑 2｜这一步会卡在下载上**。`uv.lock` 里记录的是 `files.pythonhosted.org` 的地址，
+> 而 `--frozen` 的语义是"严格照 lock 执行"，所以**光加 `-i` 换源是无效的**。
+> 必须让 uv 重新解析，同时把源指到国内镜像：
+>
+> ```bash
+> cp uv.lock /tmp/uv.lock.bak
+> UV_DEFAULT_INDEX=https://mirrors.aliyun.com/pypi/simple/ uv sync
+> git checkout -- uv.lock     # uv 会改写 lock 里的下载地址，恢复原状再提交
+> ```
+>
+> 不改 `uv.lock` 的原因：那会把所有人的依赖源绑死在阿里云。
+
+### 4. 配 `.env`
+
+```bash
+cp .env.example .env
+vim .env          # 把 DASHSCOPE_API_KEY 换成你自己的
+```
+
+`.env` 被 `.gitignore` 挡在仓库外，**不会跟着 clone 下来**，必须手工创建或从原机器 `scp` 过来：
+
+```bash
+scp <本机路径>/.env root@<服务器IP>:/root/llm-cli-toolkit/
+```
+
+### 5. 验证
+
+```bash
+uv run llm-cli parse data/a.txt    # 产出 out/a.json，五个字段
+uv run pytest -q                   # 期望 8 passed
+```
+
+两条都过，部署即完成。
+
+## 用 Docker 跑
+
+```bash
+docker build -t llm-cli:0.1 .
+docker run --rm --env-file .env -v "$PWD/out:/app/out" llm-cli:0.1 parse data/a.txt
+```
+
+四个参数各自的作用，少一个都会出问题：
+
+| 参数 | 作用 | 省了会怎样 |
+|---|---|---|
+| `--env-file .env` | 运行时把密钥注入成环境变量 | 报「缺少环境变量：DASHSCOPE_API_KEY」 |
+| `-v "$PWD/out:/app/out"` | 把容器的 `out/` 映射回宿主机 | 容器退出后 JSON 跟着容器一起删掉 |
+| `parse data/a.txt` | 接到 `ENTRYPOINT` 的 `llm-cli` 后面 | —— |
+| `--rm` | 跑完自动删容器 | 容器越积越多，`docker ps -a` 一屏 |
+
+**密钥不进镜像**：`.env` 被 `.dockerignore` 挡住，`Dockerfile` 用的是白名单 `COPY`（只拷 `src/`、`data/` 和三个依赖描述文件），
+所以镜像里没有任何密钥。验证方式：
+
+```bash
+docker run --rm --entrypoint ls llm-cli:0.1 -la /app     # 不应出现 .env
+docker history --no-trunc llm-cli:0.1 | grep -c "sk-"    # 应为 0
+```
+
+**想在容器里执行别的命令**，必须用 `--entrypoint` 覆盖（因为默认入口是 `uv run llm-cli`，
+后面跟的参数会被当成子命令）：
+
+```bash
+docker run --rm --entrypoint sh llm-cli:0.1        # 进 shell
+docker run --rm --entrypoint ls llm-cli:0.1 -la /app
+```
+
+> **坑 3｜拉基础镜像失败**（报 `failed to resolve reference ... not found`）。
+> 阿里云的个人版加速器对 `library/python` 这类多架构镜像经常返回 404，换一个：
+>
+> ```bash
+> cat > /etc/docker/daemon.json <<'EOF'
+> { "registry-mirrors": ["https://docker.m.daocloud.io"] }
+> EOF
+> systemctl daemon-reload && systemctl restart docker
+> ```
+
+> **坑 4｜容器日志时间比本地慢 8 小时**。基础镜像默认 UTC，需要在运行时注入时区：
+>
+> ```bash
+> docker run --rm -e TZ=Asia/Shanghai -v /etc/localtime:/etc/localtime:ro ...
+> ```
+
 ## 架构
 
 ```
