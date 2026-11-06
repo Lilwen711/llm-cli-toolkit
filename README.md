@@ -225,6 +225,54 @@ docker run --rm --entrypoint ls llm-cli:0.1 -la /app
 **重试只针对可恢复的错误**：网络中断、超时、限流（429）、服务端 5xx。
 请求本身有问题（400 / 401 / 403 / 404）不会重试——重试多少次结果都一样。
 
+## 知识库模块（RAG 检索）
+
+`llm_cli.kb` 子包：把 `data/kb/` 下的 Markdown 文档切成块、向量化、存入 Chroma 本地向量库，支持按 query 检索 top-K 相关文本。本周（W3）只做检索，不接生成。
+
+**链路**：加载文档 → 按 `\n\n` 段落感知切分（chunk_size / overlap 可配）→ 调 `qwen3.7-text-embedding-flash`（1024 维）向量化 → 存 Chroma 持久化目录 → query 向量化 → 余弦相似度取 top-K。
+
+**怎么建库**
+
+```bash
+uv run python -c "
+from llm_cli.config import load_settings
+from llm_cli.kb import build_store
+from pathlib import Path
+corpus = {p.name: p.read_text('utf-8') for p in sorted(Path('data/kb').glob('*.md'))}
+build_store(corpus, load_settings())
+"
+```
+
+**怎么查询**
+
+```python
+from llm_cli.kb import search
+results = search("耳机拆封了能退吗", k=3)
+# [{"text": ..., "source": "退款政策.md#退款-02", "score": 0.82}, ...]
+```
+
+`source` 字段含文件名 + 条目号（如 `退款政策.md#退款-03`），是引用溯源的物理载体——防幻觉的第一道闸。
+
+**缓存机制（重要）**
+
+embedding 模型输出非确定性（同输入两次结果余弦仅 0.9987），因此向量必须入库一次落盘复用：
+- `data/embeddings_cache.json`：按「文本哈希 + 模型名」缓存向量，命中不调 API
+- `data/chroma/`：Chroma 持久化目录，二次加载已有库不重算
+- `build_store` 按 chunk 文本 hash 去重，已存在的 chunk 不重 add 不重算
+
+二次运行 `build_store` 应看到日志「零 embedding 调用」，这是缓存生效的直接证据。
+
+**验证脚本**
+
+```bash
+uv run python scripts/verify_kb.py   # 建库 + 3 个真实问题检索 + 缓存二次零调用验证
+```
+
+**已知限制（W4 优化）**
+
+- 当前用段落感知字符分块，多个条目可能揉进一个 chunk，条目号标注会错乱。W4 上 Markdown 标题分块（一 chunk = 一条目）。
+- 检索用纯向量相似度，W4 加 BM25 混合检索 + qwen3.7-text-rerank 重排。
+
 ## 已知限制
 
 - **不支持扫描件 PDF**（整页是图片，没有文字层）。检测到会明确报错，不会静默产出空结果。

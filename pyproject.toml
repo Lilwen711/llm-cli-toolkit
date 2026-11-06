@@ -5,6 +5,7 @@ description = "电商售后助手"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "chromadb>=1.5.9",
     "openai>=3.35.1",
     "pypdf>=6.21.2",
     "python-dotenv>=1.2.4",

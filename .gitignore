@@ -6,5 +6,9 @@ out/
 logs/
 scratch/
 
+# RAG 构建产物（向量库 + embedding 缓存，clone 后自己建库）
+data/chroma/
+data/embeddings_cache.json
+
 # Virtual environments
 .venv
