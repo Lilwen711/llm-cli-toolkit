@@ -1,8 +1,9 @@
 {
-  "version": "v0",
+  "version": "v0.1",
   "created": "2026-11-07",
+  "changed": "2026-11-10 跨文档题 3→5（新增 #21/#22，带 also_expected 双出处）",
   "corpus": ["退款政策.md", "物流规则.md", "保修条款.md", "账号问题.md"],
-  "note": "每条标注标准出处(条目号)。召回判定：top-K 返回的 source 里命中标准出处即算召回成功。K=3。",
+  "note": "每条标注标准出处(条目号)。召回判定：top-K 返回的 source 里命中 expected 即算召回成功，K=3。跨文档题的完整召回需 top3 同时命中 expected 与 also_expected（两者来自不同文档，缺一不算）。",
   "queries": [
     {"id": 1,  "query": "退款多久能到账",                       "expected": "退款-04", "type": "直答"},
     {"id": 2,  "query": "保修期是多长时间",                     "expected": "保修-01", "type": "直答"},
@@ -27,6 +28,9 @@
 
     {"id": 18, "query": "哪些情况不能七天无理由退货",           "expected": "退款-02", "type": "否定边界"},
     {"id": 19, "query": "自己摔坏的手机保修吗",                 "expected": "保修-03", "type": "否定边界"},
-    {"id": 20, "query": "自己拆开修过的还能保修吗",             "expected": "保修-03", "type": "否定边界"}
+    {"id": 20, "query": "自己拆开修过的还能保修吗",             "expected": "保修-03", "type": "否定边界"},
+
+    {"id": 21, "query": "包裹丢件了，退款里包含寄出的运费吗",     "expected": "物流-05", "also_expected": "退款-03", "type": "跨文档"},
+    {"id": 22, "query": "退款还没到账能注销账号吗",               "expected": "账号-03", "also_expected": "退款-04", "type": "跨文档"}
   ]
 }

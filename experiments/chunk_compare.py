@@ -32,6 +32,20 @@ def load_corpus() -> dict[str, str]:
     return {p.name: p.read_text("utf-8") for p in sorted(KB_DIR.glob("*.md"))}
 
 
+def is_hit(q: dict, sources: list[str]) -> bool:
+    """召回判定：top-K 的 source 命中 expected 即算召回。
+
+    跨文档题额外要求同时命中 also_expected（两条来自不同文档，缺一不算）——
+    这类题的靶子是 W5「必须跨 2 个文档才能答」的验收。
+    """
+    if not any(q["expected"] in s for s in sources):
+        return False
+    also = q.get("also_expected")
+    if also and not any(also in s for s in sources):
+        return False
+    return True
+
+
 def run_one(chunk_size: int, overlap: int, corpus, embedder, client, query_vecs):
     """跑一档：切分 → 建独立 collection → 检索 20 条 → 返回明细。"""
     all_chunks = []
@@ -59,11 +73,12 @@ def run_one(chunk_size: int, overlap: int, corpus, embedder, client, query_vecs)
     for q, qvec in zip(eval_data["queries"], query_vecs):
         res = coll.query(query_embeddings=[qvec], n_results=TOP_K)
         sources = [m["source"] for m in res["metadatas"][0]]
-        hit = any(q["expected"] in s for s in sources)
+        hit = is_hit(q, sources)
         details.append({
             "id": q["id"],
             "query": q["query"],
             "expected": q["expected"],
+            "also_expected": q.get("also_expected", ""),
             "type": q["type"],
             "hit": hit,
             "top1": sources[0] if sources else "",
@@ -81,13 +96,14 @@ def main():
     embedder = Embedder(settings)
     client = chromadb.PersistentClient(path=str(PERSIST_DIR))
 
-    # query 向量三档共用：20 条一批
+    # query 向量三档共用
     queries = eval_data["queries"]
+    n_q = len(queries)
     query_texts = [q["query"] for q in queries]
-    print("向量化 20 条 query（三档共用）...")
+    print(f"向量化 {n_q} 条 query（三档共用）...")
     query_vecs = embedder.embed_texts(query_texts)
 
-    print(f"\n{'chunk_size':>10} | {'overlap':>7} | {'chunks':>6} | {'召回':>4}/20 | {'召回率':>6}")
+    print(f"\n{'chunk_size':>10} | {'overlap':>7} | {'chunks':>6} | {'召回':>4}/{n_q} | {'召回率':>6}")
     print("-" * 55)
 
     all_results = {}
@@ -96,7 +112,7 @@ def main():
         hits = sum(1 for d in details if d["hit"])
         recall = hits / len(details)
         all_results[chunk_size] = {"chunks": n_chunks, "hits": hits, "recall": recall, "details": details}
-        print(f"{chunk_size:>10} | {overlap:>7} | {n_chunks:>6} | {hits:>4}/20 | {recall:>5.0%}")
+        print(f"{chunk_size:>10} | {overlap:>7} | {n_chunks:>6} | {hits:>4}/{n_q} | {recall:>5.0%}")
 
     # 分题型召回率
     types = ["直答", "措辞陷阱", "跨条目", "跨文档", "否定边界"]
@@ -115,7 +131,8 @@ def main():
     for q in queries:
         fails = [cs for cs, _,  in CONFIGS if not all_results[cs]["details"][q["id"] - 1]["hit"]]
         if len(fails) == len(CONFIGS):
-            print(f"  #{q['id']} [{q['type']}] {q['query']} → 期望 {q['expected']}，三档全败")
+            exp = q["expected"] + ("+" + q["also_expected"] if q.get("also_expected") else "")
+            print(f"  #{q['id']} [{q['type']}] {q['query']} → 期望 {exp}，三档全败")
 
     print("\n=== 各档独有失败（其他档命中、这档失败）===")
     for cs, _,  in CONFIGS:
