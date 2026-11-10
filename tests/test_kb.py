@@ -21,12 +21,18 @@ def test_chunk_basic_split_and_source():
 
 
 def test_chunk_section_tracking():
-    """条目号跟随 ## 标题更新，source 字段反映该块所在条目。"""
+    """source 记「块首条目号」：块从哪个条目开始，就标哪个。
+
+    旧断言（source 含 退款-02）钉住的是 bug：一个块跨了 01、02 两个条目，
+    却被标成最后遇到的 02，等于把「跨条目 + 标错」写成了期望行为。
+    现约定：字符分块允许跨条目，source 只承诺「块首条目」，因此这里是 01。
+    周四按 ## 标题分块后，一个块只含一个条目，这条断言会升级为 len==2。
+    """
     text = "## 退款-01 七天无理由\n内容A\n\n## 退款-02 不适用\n内容B"
     chunks = chunk_document(text, "退款.md", chunk_size=1000, overlap=0)
-    # chunk_size 够大，应该切成 1 块，条目号是最后遇到的 退款-02
+    # chunk_size 够大，切成 1 块；块从 退款-01 开始，故 source 标 01
     assert len(chunks) == 1
-    assert "退款-02" in chunks[0]["source"]
+    assert chunks[0]["source"] == "退款.md#退款-01"
 
 
 def test_chunk_respects_size_limit():

@@ -19,10 +19,42 @@ logger = logging.getLogger(__name__)
 
 PERSIST_DIR = Path("data/chroma")
 COLLECTION = "kb_store"  # Chroma 要求 3-512 字符、[a-zA-Z0-9._-]、首尾字母数字
+EXPECTED_SPACE = "cosine"  # 距离度量必须显式声明，不能吃默认值（默认是 l2）
+COLLECTION_META = {"note": "kb-4docs / 512 字符分块 / cosine 度量（W4 修复）"}
 
 
 def _chunk_id(text: str) -> str:
     return hashlib.md5(text.encode("utf-8")).hexdigest()[:16]
+
+
+def _open_collection(client):
+    """拿到度量正确的 collection；旧库若是 l2 建的，删掉重建。
+
+    collection 的度量（hnsw:space）在建库那一刻就写进索引，之后**不可修改**：
+    get_or_create_collection 传新 metadata 会被静默忽略，不报错。
+    所以这里显式检查一次，不一致就删库——向量从 embeddings_cache.json 取，零 API 调用。
+    """
+    try:
+        coll = client.get_collection(COLLECTION)
+    except Exception:
+        coll = None
+
+    if coll is not None:
+        space = coll.configuration["hnsw"]["space"]
+        if space == EXPECTED_SPACE:
+            return coll
+        logger.warning(
+            "库的度量是 %s，代码要求 %s —— collection 配置不可改，删库重建",
+            space,
+            EXPECTED_SPACE,
+        )
+        client.delete_collection(COLLECTION)
+
+    return client.create_collection(
+        COLLECTION,
+        configuration={"hnsw": {"space": EXPECTED_SPACE}},
+        metadata=COLLECTION_META,
+    )
 
 
 def build_store(texts_by_source: dict[str, str], settings: Settings) -> int:
@@ -33,7 +65,7 @@ def build_store(texts_by_source: dict[str, str], settings: Settings) -> int:
     """
     embedder = Embedder(settings)
     client = chromadb.PersistentClient(path=str(PERSIST_DIR))
-    coll = client.get_or_create_collection(COLLECTION)
+    coll = _open_collection(client)
 
     # 切分所有文档
     all_chunks: list[dict] = []

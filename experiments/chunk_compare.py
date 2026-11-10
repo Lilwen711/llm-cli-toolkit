@@ -45,7 +45,9 @@ def run_one(chunk_size: int, overlap: int, corpus, embedder, client, query_vecs)
         client.delete_collection(coll_name)
     except Exception:
         pass
-    coll = client.create_collection(coll_name)
+    coll = client.create_collection(
+        coll_name, configuration={"hnsw": {"space": "cosine"}}
+    )
     coll.add(
         ids=[str(i) for i in range(len(all_chunks))],
         documents=[c["text"] for c in all_chunks],
