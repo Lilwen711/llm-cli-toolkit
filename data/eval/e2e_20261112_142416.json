@@ -1,0 +1,524 @@
+{
+  "time": "2026-11-12T14:24:16",
+  "eval_version": "v0.1",
+  "metrics": {
+    "retrieval": 1.0,
+    "format_ok": 0.7727272727272727,
+    "cite": 0.6363636363636364
+  },
+  "rows": [
+    {
+      "id": 1,
+      "type": "直答",
+      "query": "退款多久能到账",
+      "expected": "退款-04",
+      "retrieved": [
+        "退款政策.md#退款-04",
+        "退款政策.md#退款-01",
+        "退款政策.md#退款-05"
+      ],
+      "retrieval_hit": true,
+      "answer": "卖家收到退回商品验收通过后，3个工作日内发起退款，到账时效取决于支付渠道：支付宝/微信1-3个工作日，银行卡3-7个工作日，信用卡7-15个工作日。最终到账时间以支付机构为准。",
+      "cited": [
+        "退款-04"
+      ],
+      "valid_cites": [
+        "退款-04"
+      ],
+      "format_ok": true,
+      "cite_hit": true,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 2,
+      "type": "直答",
+      "query": "保修期是多长时间",
+      "expected": "保修-01",
+      "retrieved": [
+        "保修条款.md#保修-01",
+        "保修条款.md#保修-02",
+        "退款政策.md#退款-05"
+      ],
+      "retrieval_hit": true,
+      "answer": "保修期按品类区分：数码电子类自签收日起12个月，家电类24个月（压缩机、主板等核心部件延长至36个月），配件类3个月。保修期以物流签收时间为准，无发票的以订单记录为准。",
+      "cited": [
+        "保修-01"
+      ],
+      "valid_cites": [
+        "保修-01"
+      ],
+      "format_ok": true,
+      "cite_hit": true,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 3,
+      "type": "直答",
+      "query": "快递单号在哪里查",
+      "expected": "物流-02",
+      "retrieved": [
+        "物流规则.md#物流-02",
+        "物流规则.md#物流-05",
+        "物流规则.md#物流-06"
+      ],
+      "retrieval_hit": true,
+      "answer": "快递单号会推送至订单详情页，可在「我的订单 → 物流跟踪」查看实时轨迹。通常在订单发出后 2 小时内推送。若单号生成后 12 小时仍查不到轨迹，可联系客服核实。",
+      "cited": [
+        "条目号1"
+      ],
+      "valid_cites": [],
+      "format_ok": false,
+      "cite_hit": false,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 4,
+      "type": "直答",
+      "query": "密码忘了怎么找回",
+      "expected": "账号-02",
+      "retrieved": [
+        "账号问题.md#账号-02",
+        "账号问题.md#账号-05",
+        "账号问题.md#账号-01"
+      ],
+      "retrieval_hit": true,
+      "answer": "可在登录页点击「忘记密码」，输入注册手机号并获取短信验证码，验证通过后重设新密码。短信验证码有效期为 5 分钟。若注册手机号已停用，需联系客服提交身份证和最近 3 笔订单号，人工核验后重置密码。",
+      "cited": [
+        "账号-02"
+      ],
+      "valid_cites": [
+        "账号-02"
+      ],
+      "format_ok": true,
+      "cite_hit": true,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 5,
+      "type": "直答",
+      "query": "一般下单后多久发货",
+      "expected": "物流-01",
+      "retrieved": [
+        "物流规则.md#物流-01",
+        "物流规则.md#物流-02",
+        "物流规则.md#物流-03"
+      ],
+      "retrieval_hit": true,
+      "answer": "普通商品一般在付款成功后 48 小时内发货，以物流公司揽收时间为准。  \n预售商品以商品详情页标注的发货时间为准，通常为付款后 5-7 个工作日。  \n法定节假日期间发货时效可能顺延，以页面公告为准。",
+      "cited": [
+        "物流-01"
+      ],
+      "valid_cites": [
+        "物流-01"
+      ],
+      "format_ok": true,
+      "cite_hit": true,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 6,
+      "type": "直答",
+      "query": "怎么注销账号",
+      "expected": "账号-03",
+      "retrieved": [
+        "账号问题.md#账号-03",
+        "账号问题.md#账号-05",
+        "账号问题.md#账号-04"
+      ],
+      "retrieval_hit": true,
+      "answer": "可在「我的 → 设置 → 账号与安全 → 注销账号」操作。注销前需满足无待处理订单、无未完结售后、账户余额为零。",
+      "cited": [
+        "账号-03"
+      ],
+      "valid_cites": [
+        "账号-03"
+      ],
+      "format_ok": true,
+      "cite_hit": true,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 7,
+      "type": "措辞陷阱",
+      "query": "耳机拆了还能退吗",
+      "expected": "退款-02",
+      "retrieved": [
+        "退款政策.md#退款-01",
+        "退款政策.md#退款-02",
+        "保修条款.md#保修-03"
+      ],
+      "retrieval_hit": true,
+      "answer": "不能按七天无理由退，前提是“拆了”指已拆封，因为七天无理由要求未拆封且商品完好。若指自行拆机或更换零部件，资料只说明不免费保修，没有退货规定。",
+      "cited": [
+        "退款-01",
+        "保修-03"
+      ],
+      "valid_cites": [
+        "退款-01",
+        "保修-03"
+      ],
+      "format_ok": true,
+      "cite_hit": false,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 8,
+      "type": "措辞陷阱",
+      "query": "手机进水了保修管吗",
+      "expected": "保修-03",
+      "retrieved": [
+        "保修条款.md#保修-03",
+        "保修条款.md#保修-02",
+        "保修条款.md#保修-01"
+      ],
+      "retrieval_hit": true,
+      "answer": "手机进水不在免费保修范围内。  \n这种情况可按付费维修处理。",
+      "cited": [
+        "条目号1"
+      ],
+      "valid_cites": [],
+      "format_ok": false,
+      "cite_hit": false,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 9,
+      "type": "措辞陷阱",
+      "query": "快递好几天没更新算丢了吗",
+      "expected": "物流-05",
+      "retrieved": [
+        "物流规则.md#物流-05",
+        "物流规则.md#物流-02",
+        "物流规则.md#物流-03"
+      ],
+      "retrieval_hit": true,
+      "answer": "超过 5 个自然日物流轨迹无更新，才会认定为丢件，卖家可全额退款或补发。  \n如果订单是单号生成后 12 小时内查不到轨迹，可先联系客服核实。",
+      "cited": [
+        "物流-05",
+        "物流-02"
+      ],
+      "valid_cites": [
+        "物流-05",
+        "物流-02"
+      ],
+      "format_ok": true,
+      "cite_hit": true,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 10,
+      "type": "措辞陷阱",
+      "query": "换新手机能登同一个号吗",
+      "expected": "账号-04",
+      "retrieved": [
+        "账号问题.md#账号-04",
+        "账号问题.md#账号-01",
+        "账号问题.md#账号-03"
+      ],
+      "retrieval_hit": true,
+      "answer": "可以，新手机可以登录同一个账号。  \n用手机号验证码或已设置的登录密码登录即可，若账号已在3台设备在线，第4台登录时最早设备会自动退出。  \n异地登录可能会收到安全短信提醒。",
+      "cited": [
+        "账号-04",
+        "账号-01"
+      ],
+      "valid_cites": [
+        "账号-04",
+        "账号-01"
+      ],
+      "format_ok": true,
+      "cite_hit": true,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 11,
+      "type": "跨条目",
+      "query": "退货的运费谁来出",
+      "expected": "退款-03",
+      "retrieved": [
+        "退款政策.md#退款-03",
+        "退款政策.md#退款-05",
+        "保修条款.md#保修-04"
+      ],
+      "retrieval_hit": true,
+      "answer": "退货寄回运费按原因承担：七天无理由退货由买家承担；质量问题、发错货或少件由卖家承担。若走保修维修/换货/退款，质量问题寄回运费买家先垫付，到货核实后报销，寄回用户运费由卖家承担。",
+      "cited": [
+        "退款-03",
+        "保修-04"
+      ],
+      "valid_cites": [
+        "退款-03",
+        "保修-04"
+      ],
+      "format_ok": true,
+      "cite_hit": true,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 12,
+      "type": "跨条目",
+      "query": "收到货发现发错货了怎么办",
+      "expected": "退款-05",
+      "retrieved": [
+        "退款政策.md#退款-05",
+        "退款政策.md#退款-03",
+        "物流规则.md#物流-04"
+      ],
+      "retrieval_hit": true,
+      "answer": "收到货发现发错货，可在签收后 15 天内申请，并提供照片凭证。卖家核实后可选择退货退款、换货，或协商部分退款。退货退款按质量问题/发错货处理：退款金额为商品实付金额 + 首次寄出运费，运费由卖家承担。",
+      "cited": [
+        "退款-05",
+        "退款-03"
+      ],
+      "valid_cites": [
+        "退款-05",
+        "退款-03"
+      ],
+      "format_ok": true,
+      "cite_hit": true,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 13,
+      "type": "跨条目",
+      "query": "保修期内东西坏了走什么流程",
+      "expected": "保修-04",
+      "retrieved": [
+        "保修条款.md#保修-04",
+        "保修条款.md#保修-02",
+        "退款政策.md#退款-05"
+      ],
+      "retrieval_hit": true,
+      "answer": "保修期内先联系客服申请，需提供订单号、故障描述及故障照片或视频。  \n客服核实后开具售后单，你寄回商品，寄回运费先垫付，质量问题到货后报销。  \n检测周期为3-5个工作日，后续按判定维修/换新/退款，寄回运费由卖家承担。",
+      "cited": [
+        "保修-04"
+      ],
+      "valid_cites": [
+        "保修-04"
+      ],
+      "format_ok": true,
+      "cite_hit": true,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 14,
+      "type": "跨条目",
+      "query": "签收时发现箱子破了怎么办",
+      "expected": "物流-04",
+      "retrieved": [
+        "物流规则.md#物流-04",
+        "物流规则.md#物流-05",
+        "退款政策.md#退款-05"
+      ],
+      "retrieval_hit": true,
+      "answer": "建议先验货再签收，若发现箱子破损可当场拒收并备注“破损 / 少件”。若已签收，需在48小时内提供商品破损照片和含快递面单的外包装照片申请索赔。责任在物流的由卖家垫赔，买家无需自行联系快递。",
+      "cited": [
+        "物流-04",
+        "物流-05"
+      ],
+      "valid_cites": [
+        "物流-04",
+        "物流-05"
+      ],
+      "format_ok": true,
+      "cite_hit": true,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 15,
+      "type": "跨文档",
+      "query": "东西过保修期了还能修吗",
+      "expected": "保修-05",
+      "retrieved": [
+        "保修条款.md#保修-05",
+        "保修条款.md#保修-03",
+        "保修条款.md#保修-02"
+      ],
+      "retrieval_hit": true,
+      "answer": "可以，过保修期的商品提供付费维修服务。  \n需客服报价并经您确认后，支付维修费和来回运费寄修。  \n如无法维修会告知并退回原物，过保商品不支持换新和退款。",
+      "cited": [
+        "条目号保修-05",
+        "保修-03"
+      ],
+      "valid_cites": [
+        "保修-03"
+      ],
+      "format_ok": false,
+      "cite_hit": false,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 16,
+      "type": "跨文档",
+      "query": "七天无理由退货需要什么条件",
+      "expected": "退款-01",
+      "retrieved": [
+        "退款政策.md#退款-01",
+        "退款政策.md#退款-02",
+        "退款政策.md#退款-03"
+      ],
+      "retrieval_hit": true,
+      "answer": "七天无理由退货需在商品签收次日零时起 7 天内申请，且商品保持包装完整、配件齐全、未使用、未拆封（封条完好），不影响二次销售。食品、保健品、已拆封化妆品、已激活/在线交付虚拟商品、定制类商品、鲜活易腐商品等不适用。退货可退商品实付金额，寄回运费由买家承担。",
+      "cited": [
+        "条目号1",
+        "条目号2",
+        "条目号3"
+      ],
+      "valid_cites": [],
+      "format_ok": false,
+      "cite_hit": false,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 17,
+      "type": "跨文档",
+      "query": "买的定制商品不喜欢了能退吗",
+      "expected": "退款-02",
+      "retrieved": [
+        "退款政策.md#退款-02",
+        "退款政策.md#退款-01",
+        "退款政策.md#退款-03"
+      ],
+      "retrieval_hit": true,
+      "answer": "定制商品不适用七天无理由退货，因此“不喜欢”不能按无理由退货申请。  \n下单时页面会单独提示该类商品不适用，确认后方可下单。",
+      "cited": [
+        "退款-02"
+      ],
+      "valid_cites": [
+        "退款-02"
+      ],
+      "format_ok": true,
+      "cite_hit": true,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 18,
+      "type": "否定边界",
+      "query": "哪些情况不能七天无理由退货",
+      "expected": "退款-02",
+      "retrieved": [
+        "退款政策.md#退款-02",
+        "退款政策.md#退款-01",
+        "退款政策.md#退款-05"
+      ],
+      "retrieval_hit": true,
+      "answer": "不能七天无理由退货的情况包括：拆封后影响人身安全或质量发生变化的食品、保健品、化妆品（已拆封）；在线交付或已激活的虚拟商品；定制类商品；鲜活易腐商品。这些商品买家下单时页面会单独提示，确认后方可下单。",
+      "cited": [
+        "退款-02"
+      ],
+      "valid_cites": [
+        "退款-02"
+      ],
+      "format_ok": true,
+      "cite_hit": true,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 19,
+      "type": "否定边界",
+      "query": "自己摔坏的手机保修吗",
+      "expected": "保修-03",
+      "retrieved": [
+        "保修条款.md#保修-03",
+        "保修条款.md#保修-02",
+        "保修条款.md#保修-01"
+      ],
+      "retrieval_hit": true,
+      "answer": "不免费保修。自己摔坏属于“人为损坏（跌落）”，不在免费保修范围内，但可付费维修。",
+      "cited": [
+        "条目号保修-03"
+      ],
+      "valid_cites": [],
+      "format_ok": false,
+      "cite_hit": false,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 20,
+      "type": "否定边界",
+      "query": "自己拆开修过的还能保修吗",
+      "expected": "保修-03",
+      "retrieved": [
+        "保修条款.md#保修-03",
+        "保修条款.md#保修-02",
+        "保修条款.md#保修-01"
+      ],
+      "retrieval_hit": true,
+      "answer": "不能享受免费保修；自行拆开外壳或更换零部件、防拆贴破损属于“私自拆机”，不在保修-02 的免费维修范围内。但仍可付费维修。",
+      "cited": [
+        "保修-03"
+      ],
+      "valid_cites": [
+        "保修-03"
+      ],
+      "format_ok": true,
+      "cite_hit": true,
+      "refused": false,
+      "manual_ok": null
+    },
+    {
+      "id": 21,
+      "type": "跨文档",
+      "query": "包裹丢件了，退款里包含寄出的运费吗",
+      "expected": "物流-05+退款-03",
+      "retrieved": [
+        "退款政策.md#退款-03",
+        "物流规则.md#物流-05",
+        "退款政策.md#退款-05"
+      ],
+      "retrieval_hit": true,
+      "answer": "资料里没有相关规定。",
+      "cited": [
+        "物流-05"
+      ],
+      "valid_cites": [
+        "物流-05"
+      ],
+      "format_ok": true,
+      "cite_hit": false,
+      "refused": true,
+      "manual_ok": null
+    },
+    {
+      "id": 22,
+      "type": "跨文档",
+      "query": "退款还没到账能注销账号吗",
+      "expected": "账号-03+退款-04",
+      "retrieved": [
+        "账号问题.md#账号-03",
+        "退款政策.md#退款-04",
+        "账号问题.md#账号-05"
+      ],
+      "retrieval_hit": true,
+      "answer": "不能一概而论：若退款尚未到账且对应售后仍未完结，或导致账户余额不为零，则暂不满足注销条件。账号注销需满足“无待处理订单、无未完结售后、账户余额为零”。建议先确认该笔退款是否仍属于未完结售后/余额未清零。",
+      "cited": [
+        "账号-03"
+      ],
+      "valid_cites": [
+        "账号-03"
+      ],
+      "format_ok": true,
+      "cite_hit": false,
+      "refused": false,
+      "manual_ok": null
+    }
+  ]
+}

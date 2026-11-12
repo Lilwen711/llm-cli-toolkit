@@ -51,8 +51,17 @@ class LLMClient:
             max_retries=0,
         )
 
-    def complete(self, instructions: str, user_input: str) -> str:
-        """发一次请求，返回模型输出的原始字符串（不做任何解析）。"""
+    def complete(self, instructions: str, user_input: str, json_mode: bool = True) -> str:
+        """发一次请求，返回模型输出的原始字符串（不做任何解析）。
+
+        Args:
+            instructions: system 位指令
+            user_input: 用户内容
+            json_mode: 默认 True，要求模型输出 JSON（CLI 的 parse 命令用）。
+                       生成段（kb.ask）要的是自由文本 + 引用行，传 False。
+                       —— 注意：DashScope 对 json_object 有硬约束，prompt 里必须出现
+                       单词 "json"，否则直接 400。这就是这里必须可关的原因。
+        """
 
         last_error = None      # 记住最后一次的错误，三次都挂了要把它带出去
 
@@ -60,11 +69,12 @@ class LLMClient:
         for attempt in range(self.settings.max_retries):
             try:
                 # 真正发请求。成功就直接 return，循环到此结束
+                kwargs = {"text": {"format": {"type": "json_object"}}} if json_mode else {}
                 response = self._client.responses.create(
                     model=self.settings.model,
                     instructions=instructions,     # 相当于 system 提示
                     input=user_input,              # 用户内容
-                    text={"format": {"type": "json_object"}},   # 要求输出 JSON
+                    **kwargs,                      # json_mode 时才强制 JSON 输出
                 )
                 return response.output_text
 

@@ -225,11 +225,11 @@ docker run --rm --entrypoint ls llm-cli:0.1 -la /app
 **重试只针对可恢复的错误**：网络中断、超时、限流（429）、服务端 5xx。
 请求本身有问题（400 / 401 / 403 / 404）不会重试——重试多少次结果都一样。
 
-## 知识库模块（RAG 检索）
+## 知识库模块（RAG 问答）
 
-`llm_cli.kb` 子包：把 `data/kb/` 下的 Markdown 文档切成块、向量化、存入 Chroma 本地向量库，支持按 query 检索 top-K 相关文本。本周（W3）只做检索，不接生成。
+`llm_cli.kb` 子包：把 `data/kb/` 下的 Markdown 文档切成块、向量化、存入 Chroma 本地向量库，检索 → 精排 → 生成答案并标注引用。W4 已完成六段闭环。
 
-**链路**：加载文档 → 按 `\n\n` 段落感知切分（chunk_size / overlap 可配）→ 调 `qwen3.7-text-embedding-flash`（1024 维）向量化 → 存 Chroma 持久化目录 → query 向量化 → 余弦相似度取 top-K。
+**链路**：加载文档 → 按 `##` 标题分块（一 chunk = 一条目）→ 调 `qwen3.7-text-embedding-flash`（1024 维）向量化 → 存 Chroma（显式声明 cosine 度量）→ query 向量化检索 top-20 → `qwen3.7-text-rerank` 精排取 top-3 → `qwen3.8-flash` 生成答案 + `依据：` 引用行。
 
 **怎么建库**
 
@@ -253,6 +253,29 @@ results = search("耳机拆封了能退吗", k=3)
 
 `source` 字段含文件名 + 条目号（如 `退款政策.md#退款-03`），是引用溯源的物理载体——防幻觉的第一道闸。
 
+**怎么精排**
+
+```python
+from llm_cli.kb import rerank, search
+candidates = search("耳机拆封了能退吗", k=20)     # 粗召回
+top3 = rerank("耳机拆封了能退吗", candidates, top_k=3)   # 交叉编码器精排
+# [{"text": ..., "source": ..., "score": 0.76, "vec_score": 0.59}, ...]
+```
+
+`score` 是 rerank 分，`vec_score` 保留原向量分，便于对比两个阶段。
+
+**端到端问答（答案 + 引用）**
+
+```python
+from llm_cli.kb.ask import ask
+r = ask("耳机拆封了还能退货吗")
+print(r["answer"])       # 已拆封不满足七天无理由退货中"商品完好（未拆封）"的条件…
+print(r["cited"])        # ['退款-01']，模型写的依据条目号
+print(r["format_ok"])    # True：引用格式合法且条目号真实存在
+```
+
+`ask()` 内部就是 search → rerank → 拼 prompt → 生成 → 解析引用；任何一段失败都有明确降级或抛错，不静默出错。
+
 **缓存机制（重要）**
 
 embedding 模型输出非确定性（同输入两次结果余弦仅 0.9987），因此向量必须入库一次落盘复用：
@@ -268,10 +291,31 @@ embedding 模型输出非确定性（同输入两次结果余弦仅 0.9987），
 uv run python scripts/verify_kb.py   # 建库 + 3 个真实问题检索 + 缓存二次零调用验证
 ```
 
-**已知限制（W4 优化）**
+**实验与评测脚本**
 
-- 当前用段落感知字符分块，多个条目可能揉进一个 chunk，条目号标注会错乱。W4 上 Markdown 标题分块（一 chunk = 一条目）。
-- 检索用纯向量相似度，W4 加 BM25 混合检索 + qwen3.7-text-rerank 重排。
+```bash
+uv run python scripts/verify_kb.py            # 建库 + 3 个真实问题检索 + 缓存二次零调用验证
+uv run python experiments/chunk_compare.py    # 四档分块对照（md/256/512/1024）
+uv run python experiments/rerank_compare.py   # rerank 前后对比（top1/top3/平均排名）
+uv run python experiments/e2e_eval.py         # 22 条端到端评测，结果落盘 data/eval/
+```
+
+**实测数字（22 条评测集，4 篇语料 22 个条目）**
+
+| 阶段 | 指标 | 结果 |
+|---|---|---|
+| 分块 | top3 召回：md 标题分块 vs 字符 256/512/1024 | **100%** / 82% / 27% / 14% |
+| 精排 | top1 命中率 rerank 前 → 后 | 90% → **95%** |
+| 精排 | 正解平均排名 rerank 前 → 后 | 1.27 → **1.14** |
+| 端到端 | 检索命中率 / 引用格式合法率 / 引用命中率 | 100% / 100% / **91%** |
+| 端到端 | 答案正确率（人工勾 22 条） | 21/22 |
+
+**已知限制（W5 优化）**
+
+- **100% 不可外推**：语料只有 4 篇 22 个条目、题目自出、无跨段推理题，真实场景会低得多。W5 要换更难的评测集。
+- **否定/例外语义仍会错**：「拆封能否退」（退款-01 的「未拆封」vs 退款-02 的「拆封后不适用」）rerank 也分不出，需要 prompt 或更强模型。
+- **跨文档推理会被"忠实"规则挡回去**：#21「丢件退款含运费吗」检索到了两条正确资料，但模型判断「资料不足以回答」而拒答——语料本身没写丢件场景的运费归属，这是语料缺口，不是检索问题。
+- **纯向量检索**，W5 加 BM25 混合检索 + RRF 融合。
 
 ## 已知限制
 
