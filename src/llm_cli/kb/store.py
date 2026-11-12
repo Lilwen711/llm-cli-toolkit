@@ -12,7 +12,7 @@ import chromadb
 
 from llm_cli.config import Settings
 
-from .chunk import chunk_document
+from .chunk import chunk_by_heading
 from .embedder import Embedder
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,13 @@ logger = logging.getLogger(__name__)
 PERSIST_DIR = Path("data/chroma")
 COLLECTION = "kb_store"  # Chroma 要求 3-512 字符、[a-zA-Z0-9._-]、首尾字母数字
 EXPECTED_SPACE = "cosine"  # 距离度量必须显式声明，不能吃默认值（默认是 l2）
-COLLECTION_META = {"note": "kb-4docs / 512 字符分块 / cosine 度量（W4 修复）"}
+CHUNK_MODE = "heading"  # 切分策略：heading=按 ## 条目切；chars=字符分块
+MAX_CHARS = 512
+COLLECTION_META = {
+    "note": "kb-4docs / Markdown 标题分块 / cosine 度量（W4）",
+    "chunk_mode": CHUNK_MODE,
+    "max_chars": MAX_CHARS,
+}
 
 
 def _chunk_id(text: str) -> str:
@@ -41,12 +47,15 @@ def _open_collection(client):
 
     if coll is not None:
         space = coll.configuration["hnsw"]["space"]
-        if space == EXPECTED_SPACE:
+        mode = (coll.metadata or {}).get("chunk_mode", "")
+        if space == EXPECTED_SPACE and mode == CHUNK_MODE:
             return coll
         logger.warning(
-            "库的度量是 %s，代码要求 %s —— collection 配置不可改，删库重建",
+            "库的度量是 %s、切分策略是 %s，代码要求 %s + %s —— 配置不可改，删库重建",
             space,
+            mode or "<未声明>",
             EXPECTED_SPACE,
+            CHUNK_MODE,
         )
         client.delete_collection(COLLECTION)
 
@@ -67,10 +76,10 @@ def build_store(texts_by_source: dict[str, str], settings: Settings) -> int:
     client = chromadb.PersistentClient(path=str(PERSIST_DIR))
     coll = _open_collection(client)
 
-    # 切分所有文档
+    # 切分所有文档（W4：按 ## 条目切，一 chunk 一条目，source 天然唯一）
     all_chunks: list[dict] = []
     for source, text in texts_by_source.items():
-        all_chunks.extend(chunk_document(text, source))
+        all_chunks.extend(chunk_by_heading(text, source, max_chars=MAX_CHARS))
 
     # 去掉库里已存在的
     existing_ids = set(coll.get()["ids"]) if coll.count() > 0 else set()

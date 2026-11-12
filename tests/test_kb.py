@@ -2,7 +2,7 @@
 
 embedding/检索的端到端验证走 scripts/verify_kb.py，不放 pytest（避免每次跑测试都调 API 花钱）。
 """
-from llm_cli.kb.chunk import chunk_document
+from llm_cli.kb.chunk import chunk_by_heading, chunk_document
 
 
 def test_chunk_empty_returns_empty():
@@ -52,3 +52,46 @@ def test_chunk_overlap_creates_continuity():
     if len(chunks) >= 2:
         # 第二块开头应包含第一块末尾的部分内容
         assert chunks[1]["text"][:10] in chunks[0]["text"]
+
+
+# ==================== 策略二：Markdown 标题分块（W4） ====================
+# 这四个 case 就是周三设计稿的四个边界，一个都不能少。
+
+
+def test_md_one_chunk_per_section():
+    """边界 1：一个 chunk = 一个条目，source 天然唯一，不再跨条目。"""
+    text = "# 退款政策\n\n## 退款-01 七天无理由\n内容A\n\n## 退款-02 不适用\n内容B"
+    chunks = chunk_by_heading(text, "退款.md")
+    assert [c["source"] for c in chunks] == ["退款.md#退款-01", "退款.md#退款-02"]
+    assert "内容A" in chunks[0]["text"]
+    assert "内容B" in chunks[1]["text"]
+
+
+def test_md_preface_kept_only_if_has_body():
+    """边界 2：文档头（第一个 ## 之前）有正文才独立成块，只有标题就丢掉。"""
+    with_body = "# 政策\n\n适用范围：所有实物商品。\n\n## 退款-01 x\nA"
+    assert [c["source"] for c in chunk_by_heading(with_body, "p.md")] == [
+        "p.md#前言",
+        "p.md#退款-01",
+    ]
+
+    title_only = "# 政策\n\n## 退款-01 x\nA"
+    assert [c["source"] for c in chunk_by_heading(title_only, "p.md")] == ["p.md#退款-01"]
+
+
+def test_md_long_section_split_keeps_source():
+    """边界 3：单条目超长时二次切分，多块共用同一条目号（source 不加后缀）。"""
+    body = "## 保修-02 保修范围\n" + "\n\n".join(["段落" + "x" * 100] * 6)
+    chunks = chunk_by_heading("# 保修条款\n\n" + body, "保修.md", max_chars=200)
+    assert len(chunks) >= 2
+    assert {c["source"] for c in chunks} == {"保修.md#保修-02"}
+    assert all(len(c["text"]) <= 200 for c in chunks)
+
+
+def test_md_unnumbered_heading_merges():
+    """边界 4：提不出编号的 ## 标题（如「## 注意事项」）不切块，并入上一块。"""
+    text = "## 退款-01 x\nA\n\n## 注意事项\nB"
+    chunks = chunk_by_heading(text, "p.md")
+    assert len(chunks) == 1
+    assert chunks[0]["source"] == "p.md#退款-01"
+    assert "B" in chunks[0]["text"]

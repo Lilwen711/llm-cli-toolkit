@@ -123,3 +123,92 @@ def chunk_document(text: str, source: str, chunk_size: int = 512, overlap: int =
 
     # 返回所有切分好的 chunk
     return chunks
+
+
+# ============================================================================
+# 策略二（W4 主线）：按 ## 标题分块，一个 chunk = 一个条目
+# 为什么换：字符分块会让一个块跨多个条目，source 只能记首条目，块里其他条目的
+# 内容被归到邻居名下——这是 W3 召回只有 50% 的主因。按 ## 切，source 天然唯一。
+# ============================================================================
+
+# 文档头（第一个 ## 之前）没有条目号，用一个固定名占位
+_PREFACE = "前言"
+
+
+def _strip_title(body: str) -> str:
+    """去掉块首的 # 文档标题行，用于判断前言块是不是只有标题没有正文。"""
+    lines = [ln for ln in body.splitlines() if not ln.startswith("# ")]
+    return "\n".join(lines).strip()
+
+
+def _split_long(body: str, max_chars: int) -> list[str]:
+    """单条目超长时按段落二次切分，保证每块不超过 max_chars。
+
+    切出来的多块共用同一条目号（source 不加后缀），引用只需条目号即可定位。
+    """
+    if len(body) <= max_chars:
+        return [body]
+
+    pieces: list[str] = []
+    current = ""
+    for para in body.split("\n\n"):
+        if not para.strip():
+            continue
+        candidate = para if not current else current + "\n\n" + para
+        if len(candidate) <= max_chars:
+            current = candidate
+        else:
+            if current:
+                pieces.append(current)
+            # 单段本身就超长时只能硬切
+            while len(para) > max_chars:
+                pieces.append(para[:max_chars])
+                para = para[max_chars:]
+            current = para
+    if current:
+        pieces.append(current)
+    return pieces
+
+
+def chunk_by_heading(text: str, source: str, max_chars: int = 512) -> list[dict]:
+    """按 ## 条目切分：一个 chunk = 一个条目。
+
+    Args:
+        text: 文档纯文本
+        source: 来源标识（文件名）
+        max_chars: 单块上限，超长条目按段落二次切
+
+    Returns:
+        list[dict]: [{"text": ..., "source": "退款政策.md#退款-03"}, ...]
+    """
+    if not text:
+        return []
+
+    # 第一步：按 ## 切成 [(条目号, 该条目的所有行), ...]
+    # <<<<<<<<<< 这一段由你（麻瀚文）手写，SPEC 见下 >>>>>>>>>>
+    blocks: list[tuple[str, list[str]]] = []
+    current_section = _PREFACE
+    current_lines: list[str] = []
+    for line in text.splitlines():
+        section = _extract_section(line) if line.startswith("## ") else ""
+        if section:
+            blocks.append((current_section, current_lines))   # ① 收旧的
+            current_section = section                        # ② 换标签
+            current_lines = [line]                           # ③ 新组从这个标题行开始
+            continue
+        current_lines.append(line)
+    blocks.append((current_section, current_lines))
+
+
+    chunks: list[dict] = []
+    for section, lines in blocks:
+        body = "\n".join(lines).strip()
+        if not body:
+            continue
+        # 只含 "# 文档标题"、没有实际正文的前言块没有检索价值，丢掉
+        if section == _PREFACE and not _strip_title(body):
+            continue
+        for piece in _split_long(body, max_chars):
+            chunks.append({"text": piece, "source": f"{source}#{section}"})
+
+    return chunks
